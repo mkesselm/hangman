@@ -1,0 +1,9 @@
+{% extends 'hangmangame/header.html' %}
+{% block content %}
+<div class="stats" align="center">
+  <h1>{{ player }}</h1>
+  <p>Played games:</p>
+  <p> {{ player.played_games }}</p>
+  <a href="{% url 'hangmangame:match' player %}">Return to match?</a>
+</div>
+{% endblock %}

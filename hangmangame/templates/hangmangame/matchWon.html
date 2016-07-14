@@ -1,0 +1,8 @@
+{% extends 'hangmangame/header.html' %}
+{% block content %}
+<div class="match-won" align="center">
+  <h1>{{ gamestate.owner }}</h1>
+  <p>You got the word right!</p>
+  <a href="{% url 'hangmangame:match' gamestate.owner %}">Save another?</a>
+</div>
+{% endblock %}

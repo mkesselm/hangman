@@ -1,0 +1,12 @@
+{% extends 'hangmangame/header.html' %}
+{% block content %}
+<div class="match-loss" align="center">
+  <h1>{{ gamestate.owner }}</h1>
+  <div class="hangman-image" align="left">
+    <pre><p>{{ hanged_man }}</p></pre>
+  </div>
+  <p><strong>The word was {{ old_gamestate.word_to_guess }}!
+  </strong></p>
+  <a href="{% url 'hangmangame:match' gamestate.owner %}">Play again?</a>
+</div>
+{% endblock %}

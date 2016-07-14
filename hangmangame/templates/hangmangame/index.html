@@ -1,0 +1,17 @@
+{% extends 'hangmangame/header.html' %}
+{% block content %}
+<div class="landing-page-banner" align="center">
+  <h1>DJANGMAN</h1>
+  <p class="lead">Like Hangman, but with server-side business logic and stat tracking!</p>
+</div>
+<div class="landing-page-directions">
+  <p><strong>Enter your username below. If you are a returning user, you will be directed to your game. If you are a new user, a new game will be generated for you and your illustrious career of saving the illiterate from the gallows will begin!</strong></p>
+</div>
+<div class="login-form-page" align="center">
+  <form method="post" class="login-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
+{% endblock %}
