@@ -29,7 +29,6 @@ def get_current_gamestate(player_name):
 def login(request, form):
     player_name = form.cleaned_data.get('player_name')
     # success_message = "%(player_name)s"
-    # print(player_name.upper()) #DEBUG
     if(Player.objects.filter(pk=player_name)):
         # player_name exists
         # retrieve the current game's bad guess count and redirect
@@ -47,39 +46,6 @@ def login(request, form):
         g.save()
         return HttpResponseRedirect(reverse('hangmangame:match',
         args=(player_name,)))
-
-
-def guess(request, gamestate, letter):
-    # check letter against the passed gamestate and win/lose/loop accordingly
-    gamestate.fill_in_guess(letter)
-    gamestate.save()
-    guess_count = gamestate.bad_guess_counter
-    # Now run through win/loss/loop-logic and redirect accordingly
-    if gamestate.game_won():
-        player_entry = get_object_or_404(Player, pk=gamestate.owner)
-        player_entry.played_games += 1
-        player_entry.save()
-        gamestate.reset()
-        gamestate.save()
-        gamestate.refresh_from_db()
-        return render(request, 'hangmangame/matchWon.html',
-        {'gamestate': gamestate,})
-    elif gamestate.bad_guess_counter >= 10:
-        player_entry = get_object_or_404(Player, pk=gamestate.owner)
-        player_entry.played_games += 1
-        player_entry.games_lost += 1
-        player_entry.save()
-        old_word = gamestate.word_to_guess
-        gamestate.reset()
-        gamestate.save()
-        gamestate.refresh_from_db()
-        return render(request, 'hangmangame/matchLoss.html',
-        {'old_word': old_word, 'hanged_man': hangman_images_list[10],
-         'gamestate': gamestate,})
-    else:
-        print(gamestate.owner_id)
-        return HttpResponseRedirect(reverse('hangmangame:match',
-        args=(gamestate.owner,)))
 
 
 class IndexView(FormView):
@@ -120,7 +86,7 @@ class MatchView(FormView):
         form = self.form_class(request.POST)
         if form.is_valid():
             letter = form.cleaned_data.get('guess')
-            return guess(request, current_gamestate, letter)
+            return current_gamestate.guess(request, letter)
 
 
 class StatsView(generic.DetailView):

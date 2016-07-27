@@ -1,7 +1,9 @@
 import random
+from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.db import models
-
+from .images import hangman_images_list
 
 # Player
 #   contains
@@ -81,6 +83,34 @@ class Gamestate(models.Model):
             else:
                 self.bad_guess_counter += 1
             self.save()
+
+    def guess(self, request, letter):
+        # check letter against the passed gamestate and win/lose/loop accordingly
+        self.fill_in_guess(letter)
+        guess_count = self.bad_guess_counter
+        # Now run through win/loss/loop-logic and redirect accordingly
+        if self.game_won():
+            player_entry = get_object_or_404(Player, pk=self.owner)
+            player_entry.played_games += 1
+            player_entry.save()
+            self.reset()
+            self.save()
+            return render(request, 'hangmangame/matchWon.html',
+            {'gamestate': self,})
+        elif self.bad_guess_counter >= 10:
+            player_entry = get_object_or_404(Player, pk=self.owner)
+            player_entry.played_games += 1
+            player_entry.games_lost += 1
+            player_entry.save()
+            old_word = self.word_to_guess
+            self.reset()
+            self.save()
+            return render(request, 'hangmangame/matchLoss.html',
+            {'old_word': old_word, 'hanged_man': hangman_images_list[10],
+             'gamestate': self,})
+        else:
+            return HttpResponseRedirect(reverse('hangmangame:match',
+            args=(self.owner,)))
 
     def reset(self):
         self.game_lost = False
