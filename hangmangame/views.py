@@ -4,40 +4,15 @@ from django.core.urlresolvers import reverse
 from django.views import generic
 from django.views.generic import View, FormView
 from django.contrib.messages.views import SuccessMessageMixin
-
 from .models import Gamestate, Player
 from .forms import LogInForm, GuessForm
-
-# list of ascii images passed to client during gameplay
-# N.B. template using entries from this list must use the <pre>...</pre> notation or this will show up as gibberish
-hangman_images_list = [
-    # 0
-    '',
-    # 1
-    '_______________________________\n|                             |\n-------------------------------',
-    # 2
-    '               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n_______________________________\n|                             |\n-------------------------------',
-    # 3
-    '               ============\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n_______________________________\n|                             |\n-------------------------------',
-    # 4
-    '               ============\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n_______________________________\n|                             |\n-------------------------------',
-    # 5
-    '               ============\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        _\n               |||      /oo\\\n               |||      \\  /\n               |||        -\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n_______________________________\n|                             |\n-------------------------------',
-    # 6
-    '               ============\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        _\n               |||      /oo\\\n               |||      \\ ^/\n               |||       --\n               |||     | || |\n               |||     | || |\n               |||     0 || 0\n               |||\n               |||\n               |||\n               |||\n               |||\n               |||\n_______________________________\n|                             |\n-------------------------------',
-    # 7
-    '               ============\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        _\n               |||      /oo\\\n               |||      \\ ^/\n               |||       --\n               |||     | || |\n               |||     | || |\n               |||     0 || 0\n               |||      |  |\n               |||      |  |\n               |||      b  b\n               |||\n               |||\n               |||\n_______________________________\n|                             |\n-------------------------------',
-    # 8
-    '               ============\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        _\n               |||      /oo\\\n               |||      \\ ^/\n               |||       --\n               |||     | || |\n               |||     | || |\n               |||     0 || 0\n               |||      |  |\n               |||      |  |\n               |||      b  b\n               |||      ----\n               |||    | |___|\n               |||    |..|___|\n_______________________________\n|                             |\n-------------------------------',
-    # 9
-    '               ============\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        _\n               |||      /oo\\\n               |||      \\ O/\n               |||       --\n               |||     | || |\n               |||     | || |\n               |||     0 || 0\n               |||      |  |\n               |||      |  |\n               |||      b  b\n               |||\n               |||\n               |||\n_______________________________\n|                             |\n-------------------------------',
-    # 10
-    '               ============\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        |\n               |||        _\n               |||      /xx\\\n               |||      \\ ,/\n               |||       --\n               |||      /||\\\n               |||     | || |\n               |||     0 || 0\n               |||      |  |\n               |||      |  |\n               |||      b  b\n               |||\n               |||\n               |||\n_______________________________\n|                             |\n-------------------------------',
-]
+from .images import hangman_images_list
 
 
 def parse_player_name(path):
-    # find the player_name by parsing the tail of the request's url; either this or overloading the SuccessMessageMixin--which I don't have a good grasp of yet--are necessary to pass information between view classes
+    # find the player_name by parsing the tail of the request's url; either this
+    # or overloading the SuccessMessageMixin--which I don't have a good grasp of
+    # yet--are necessary to pass information between view classes
     i = -2
     c = ''
     while c != '/':
@@ -46,8 +21,10 @@ def parse_player_name(path):
     i += 2
     return path[len(path)+i:len(path)-1]
 
+
 def get_current_gamestate(player_name):
     return Player.objects.get(pk=player_name).gamestate_set.last()
+
 
 def login(request, form):
     player_name = form.cleaned_data.get('player_name')
@@ -56,17 +33,21 @@ def login(request, form):
     if(Player.objects.filter(pk=player_name)):
         # player_name exists
         # retrieve the current game's bad guess count and redirect
-        return HttpResponseRedirect(reverse('hangmangame:match', args=(player_name,)))
+        return HttpResponseRedirect(reverse('hangmangame:match',
+        args=(player_name,)))
     else:
         # player_name does not exist
-        # create a new player_name, a new gamestate, save them to the db, and redirect
+        # create a new player_name, a new gamestate, save them to the db, and
+        # redirect
         p = Player(player_name)
         p.save()
         g = Gamestate()
         g.reset()
         g.owner_id = p.pk
         g.save()
-        return HttpResponseRedirect(reverse('hangmangame:match', args=(player_name,)))
+        return HttpResponseRedirect(reverse('hangmangame:match',
+        args=(player_name,)))
+
 
 def guess(request, gamestate, letter):
     # check letter against the passed gamestate and win/lose/loop accordingly
@@ -81,7 +62,8 @@ def guess(request, gamestate, letter):
         gamestate.reset()
         gamestate.save()
         gamestate.refresh_from_db()
-        return render(request, 'hangmangame/matchWon.html', {'gamestate': gamestate,})
+        return render(request, 'hangmangame/matchWon.html',
+        {'gamestate': gamestate,})
     elif gamestate.bad_guess_counter >= 10:
         player_entry = get_object_or_404(Player, pk=gamestate.owner)
         player_entry.played_games += 1
@@ -91,10 +73,14 @@ def guess(request, gamestate, letter):
         gamestate.reset()
         gamestate.save()
         gamestate.refresh_from_db()
-        return render(request, 'hangmangame/matchLoss.html', {'old_word': old_word, 'hanged_man': hangman_images_list[10], 'gamestate': gamestate,})
+        return render(request, 'hangmangame/matchLoss.html',
+        {'old_word': old_word, 'hanged_man': hangman_images_list[10],
+         'gamestate': gamestate,})
     else:
         print(gamestate.owner_id)
-        return HttpResponseRedirect(reverse('hangmangame:match', args=(gamestate.owner,)))
+        return HttpResponseRedirect(reverse('hangmangame:match',
+        args=(gamestate.owner,)))
+
 
 class IndexView(FormView):
     template_name = 'hangmangame/index.html'
@@ -111,6 +97,7 @@ class IndexView(FormView):
         if form.is_valid():
             return login(request, form)
 
+
 class MatchView(FormView):
     model = Player
     template_name = 'hangmangame/match.html'
@@ -121,7 +108,11 @@ class MatchView(FormView):
         player_name = parse_player_name(request.path)
         current_gamestate = get_current_gamestate(player_name)
         form = self.form_class()
-        return render(request, self.template_name, {'form': form, 'model': Player.objects.get(pk=player_name), 'gamestate': current_gamestate, 'hangman_image': hangman_images_list[current_gamestate.bad_guess_counter],})
+        return render(request, self.template_name, {'form': form,
+        'model': Player.objects.get(pk=player_name),
+        'gamestate': current_gamestate,
+        'hangman_image': hangman_images_list[
+        current_gamestate.bad_guess_counter],})
 
     def post(self, request, *args, **kwargs):
         player_name = parse_player_name(request.path)
@@ -131,6 +122,7 @@ class MatchView(FormView):
             letter = form.cleaned_data.get('guess')
             return guess(request, current_gamestate, letter)
 
+
 class StatsView(generic.DetailView):
     model = Player
     template_name = 'hangmangame/stats.html'
@@ -138,4 +130,5 @@ class StatsView(generic.DetailView):
     def get(self, request, *args, **kwargs):
         player_name = parse_player_name(request.path)
         get_object_or_404(Player, pk=player_name)
-        return render(request, 'hangmangame/stats.html', {'player': Player.objects.get(pk=player_name),})
+        return render(request, 'hangmangame/stats.html',
+        {'player': Player.objects.get(pk=player_name),})

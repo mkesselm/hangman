@@ -1,7 +1,9 @@
 {% extends 'hangmangame/header.html' %}
 {% block content %}
 <div class="match" align="center">
-  <h1>Click <a href="{% url 'hangmangame:stats' gamestate.owner %}">{{ model }}</a> for stats.</h1>
+  <h1>Click <a href="{% url 'hangmangame:stats' gamestate.owner %}">
+      {{ model }}</a> for stats.
+  </h1>
   <p>Incorrect guesses: {{ gamestate.bad_guess_counter }}</p>
   <div class="hangman-image" align="left">
     <pre><p>{{ hangman_image }}</p></pre>
