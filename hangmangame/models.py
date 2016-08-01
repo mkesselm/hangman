@@ -52,6 +52,9 @@ class Gamestate(models.Model):
 
     guessed_letters = models.CharField(max_length=100, default='')
 
+    guessed_letters_sorted = models.CharField(max_length=100, default='')
+
+
     def __str__(self):
         return self.word_to_guess
 
@@ -67,6 +70,11 @@ class Gamestate(models.Model):
     def fill_in_guess(self, guess):
         if guess not in self.guessed_letters:
             self.guessed_letters += guess
+            self.guessed_letters_sorted += guess
+            # maintain the sorted guess list for display purposes
+            swap_list = list(self.guessed_letters_sorted)
+            swap_list.sort()
+            self.guessed_letters_sorted = ''.join(swap_list)
             if self.check_guess(guess):
                 # create a list of indices of word_in_play to fill in by
                 # matching the guess against word_to_guess

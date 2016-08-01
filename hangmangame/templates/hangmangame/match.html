@@ -16,7 +16,7 @@
   </form>
   <div class="guessed-letters" align="center">
     <p><u>You have already guessed:</p></u>
-    {% for letter in gamestate.guessed_letters %}
+    {% for letter in gamestate.guessed_letters_sorted %}
       <strong>{{ letter }}</strong>,
     {% endfor %}
   </div>
